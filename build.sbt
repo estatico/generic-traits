@@ -1,8 +1,8 @@
+organization in ThisBuild := "io.estatico"
+
 name := "case-traits"
 
-version := "1.0"
-
-scalaVersion := "2.12.2"
+version := "0.0.1-SNAPSHOT"
 
 scalacOptions ++= Seq(
   "-Xfatal-warnings",
