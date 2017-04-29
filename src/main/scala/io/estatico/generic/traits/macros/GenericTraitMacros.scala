@@ -1,9 +1,12 @@
 package io.estatico.generic.traits.macros
 
+import shapeless.{CaseClassMacros, SingletonTypeUtils}
+
 import scala.reflect.macros.whitebox
 
 @macrocompat.bundle
-private[traits] final class GenericTraitMacros(val c: whitebox.Context) {
+private[traits] final class GenericTraitMacros(val c: whitebox.Context)
+  extends SingletonTypeUtils with CaseClassMacros {
 
   import c.universe._
 
@@ -33,10 +36,33 @@ private[traits] final class GenericTraitMacros(val c: whitebox.Context) {
     """
   }
 
+  def materializeDefaultSymbolicLabelling[T : WeakTypeTag]: Tree = {
+    val typ = weakTypeOf[T]
+    if (!typ.typeSymbol.isAbstract) {
+      c.abort(c.enclosingPosition, "Cannot materialize non-abstract class")
+    }
+    val fields = collectFields(typ)
+    val labels: List[String] = fields.map(f => f._1.decodedName.toString)
+    val labelTypes = labels.map(SingletonSymbolType(_))
+    val labelValues = labels.map(mkSingletonSymbol)
+
+    val labelsType = mkHListTpe(labelTypes)
+    val labelsValue = labelValues.foldRight(q"$HNilObj")((x, acc) =>
+      q"$HConsObj($x, $acc)"
+    )
+
+    q"""
+      new $DefaultSymbolicLabellingClass[$typ] {
+        type Out = $labelsType
+        def apply(): $labelsType = $labelsValue
+      }: $DefaultSymbolicLabellingObj.Aux[$typ, $labelsType]
+    """
+  }
+
   private def collectFields(typ: Type): List[(TermName, Type)] = {
     typ.members.sorted.collect { case m if m.isAbstract && m.typeSignature.paramLists == Nil =>
       (m.name.toTermName, m.typeSignature.resultType)
-    }.toList
+    }
   }
 
   private def makeOverrides(fields: List[(TermName, Type)]): List[Tree] = {
@@ -65,10 +91,15 @@ private[traits] final class GenericTraitMacros(val c: whitebox.Context) {
     (name, q"case class $name(..$caseFields) extends $typ")
   }
 
-  private val GenericClass = typeOf[shapeless.Generic[_]].typeSymbol.asType
+  private val DefaultSymbolicLabellingClass = getType[shapeless.DefaultSymbolicLabelling[_]]
+  private val DefaultSymbolicLabellingObj = DefaultSymbolicLabellingClass.companion
+  private val GenericClass = getType[shapeless.Generic[_]]
   private val GenericObj = GenericClass.companion
-  private val HConsClass = typeOf[shapeless.::[_, _]].typeSymbol.asType
+  private val HConsClass = getType[shapeless.::[_, _]]
   private val HConsObj = HConsClass.companion
-  private val HNilClass = typeOf[shapeless.HNil].typeSymbol.asType
+  private val HNilClass = getType[shapeless.HNil]
   private val HNilObj = HNilClass.companion
+
+  // TODO: Is the .typeSymbol.asType necessary?
+  private def getType[T : TypeTag] = typeOf[T].typeSymbol.asType
 }
