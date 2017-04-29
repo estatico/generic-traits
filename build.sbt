@@ -1,6 +1,6 @@
 organization in ThisBuild := "io.estatico"
 
-name := "case-traits"
+name := "generic-traits"
 
 version := "0.0.1-SNAPSHOT"
 
