@@ -69,7 +69,10 @@ private[traits] final class GenericTraitMacros(val c: whitebox.Context)
           && s.asMethod.paramLists == Nil
           && s.asMethod.typeParams == Nil
         )
+        // If this method is eligible to be a case field, add it to our fields map.
+        // If it's ineligible, be sure it is removed if it was previously added.
         if (isEligible) fields += (s.name.toTermName -> s.typeSignature.resultType)
+        else fields.remove(s.name.toTermName)
       }
     }
     fields.toList
