@@ -11,4 +11,3 @@ trait TraitInstances {
   implicit def materializeDefaultSymbolicLabellingTrait[T]: DefaultSymbolicLabelling[T] =
     macro M.materializeDefaultSymbolicLabelling[T]
 }
-
