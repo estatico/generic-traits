@@ -4,8 +4,6 @@ organization in ThisBuild := "io.estatico"
 
 name := "generic-traits"
 
-version := "0.0.1-SNAPSHOT"
-
 scalacOptions ++= Seq(
   "-Xfatal-warnings",
   "-unchecked",
