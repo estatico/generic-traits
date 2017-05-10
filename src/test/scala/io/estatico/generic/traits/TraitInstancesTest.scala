@@ -35,6 +35,13 @@ class TraitInstancesTest extends FlatSpec with Matchers {
     (from.a, from.b) shouldEqual (params.a, params.b)
   }
 
+  it should "create Generic fields only for abstract members" in {
+    val g = Generic[Partial]
+    g.to(partial) shouldEqual partialHList
+    val from = g.from(partialHList)
+    from.foo shouldEqual partial.foo
+  }
+
   it should "create a valid DefaultSymbolicLabelling instance" in {
     DefaultSymbolicLabelling[Foo].apply() shouldEqual fooSymbols
   }
@@ -49,6 +56,10 @@ class TraitInstancesTest extends FlatSpec with Matchers {
 
   it should "create DefaultSymbolicLabelling for trait with type params" in {
     DefaultSymbolicLabelling[Params[_, _]].apply() shouldEqual paramsSymbols
+  }
+
+  it should "create DefaultSymbolicLabelling fields only for abstract members" in {
+    DefaultSymbolicLabelling[Partial].apply() shouldEqual partialSymbols
   }
 
   it should "get LabelledGeneric" in {
@@ -127,4 +138,18 @@ object TraitInstancesTest {
   val paramsHList = params.a :: params.b :: HNil
 
   val paramsSymbols = 'a :: 'b :: HNil
+
+  trait PartialBase {
+    def foo: Int
+    def bar: String
+  }
+
+  trait Partial extends PartialBase {
+    def foo: Int
+    def bar: String = foo.toString
+  }
+
+  val partial = new Partial { val foo = 24 }
+  val partialHList = partial.foo :: HNil
+  val partialSymbols = 'foo :: HNil
 }

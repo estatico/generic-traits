@@ -68,7 +68,11 @@ private[traits] final class GenericTraitMacros(val c: whitebox.Context)
           && s.asMethod.paramLists == Nil
           && s.asMethod.typeParams == Nil
         )
-        if (isEligible) fields += (s.name.toTermName -> s.typeSignatureIn(typ).resultType)
+        if (isEligible) {
+          fields += (s.name.toTermName -> s.typeSignatureIn(typ).resultType)
+        } else {
+          fields -= s.name.toTermName
+        }
       }
     }
     fields.toList
