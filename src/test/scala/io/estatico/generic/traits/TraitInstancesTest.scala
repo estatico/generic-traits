@@ -11,21 +11,28 @@ class TraitInstancesTest extends FlatSpec with Matchers {
     val g = Generic[Foo]
     g.to(foo) shouldEqual fooHList
     val from = g.from(fooHList)
-    (from.bar, from.baz) shouldEqual(foo.bar, foo.baz)
+    (from.bar, from.baz) shouldEqual (foo.bar, foo.baz)
   }
 
   it should "create Generic for single inheritance" in {
     val g = Generic[Quux]
     g.to(quux) shouldEqual quuxHList
     val from = g.from(quuxHList)
-    (from.bar, from.baz, from.spam) shouldEqual(quux.bar, quux.baz, quux.spam)
+    (from.bar, from.baz, from.spam) shouldEqual (quux.bar, quux.baz, quux.spam)
   }
 
   it should "create Generic for multiple inheritance" in {
     val g = Generic[OneTwoThree]
     g.to(ott) shouldEqual ottHList
     val from = g.from(ottHList)
-    (from.one, from.two, from.three) shouldEqual(ott.one, ott.two, ott.three)
+    (from.one, from.two, from.three) shouldEqual (ott.one, ott.two, ott.three)
+  }
+
+  it should "create Generic for trait with type params" in {
+    val g = Generic[Params[String, Int]]
+    g.to(params) shouldEqual paramsHList
+    val from = g.from(paramsHList)
+    (from.a, from.b) shouldEqual (params.a, params.b)
   }
 
   it should "create a valid DefaultSymbolicLabelling instance" in {
@@ -38,6 +45,10 @@ class TraitInstancesTest extends FlatSpec with Matchers {
 
   it should "create DefaultSymbolicLabelling for multiple inheritance" in {
     DefaultSymbolicLabelling[OneTwoThree].apply() shouldEqual ottSymbols
+  }
+
+  it should "create DefaultSymbolicLabelling for trait with type params" in {
+    DefaultSymbolicLabelling[Params[_, _]].apply() shouldEqual paramsSymbols
   }
 
   it should "get LabelledGeneric" in {
@@ -102,4 +113,18 @@ object TraitInstancesTest {
   val ottHList = ott.one :: ott.two :: ott.three :: HNil
 
   val ottSymbols = 'one :: 'two :: 'three :: HNil
+
+  trait Params[A, B] {
+    def a: A
+    def b: B
+  }
+
+  val params = new Params[String, Int] {
+    val a = "c"
+    val b = 42
+  }
+
+  val paramsHList = params.a :: params.b :: HNil
+
+  val paramsSymbols = 'a :: 'b :: HNil
 }

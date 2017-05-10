@@ -17,21 +17,20 @@ private[traits] final class GenericTraitMacros(val c: whitebox.Context)
       c.abort(c.enclosingPosition, "Cannot materialize non-abstract class")
     }
     val fields = collectFields(typ)
-    val typeName = typ.typeSymbol.name.toTypeName
     val ReprType = makeHListType(fields.map(_._2))
     val toBody = makeHListVal(fields.map(_._1))
 
     q"""
-      new $GenericClass[$typeName] {
+      new $GenericClass[$typ] {
 
         override type Repr = $ReprType
 
-        override def to(t: $typeName): Repr = $toBody
+        override def to(t: $typ): Repr = $toBody
 
-        override def from(r: Repr): $typeName = new $typeName {
+        override def from(r: Repr): $typ = new $typ {
           ..${makeOverrides(fields)}
         }
-      }: $GenericObj.Aux[$typeName, $ReprType]
+      }: $GenericObj.Aux[$typ, $ReprType]
     """
   }
 
@@ -69,7 +68,7 @@ private[traits] final class GenericTraitMacros(val c: whitebox.Context)
           && s.asMethod.paramLists == Nil
           && s.asMethod.typeParams == Nil
         )
-        if (isEligible) fields += (s.name.toTermName -> s.typeSignature.resultType)
+        if (isEligible) fields += (s.name.toTermName -> s.typeSignatureIn(typ).resultType)
       }
     }
     fields.toList
